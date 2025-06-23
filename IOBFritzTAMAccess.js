@@ -24,6 +24,7 @@ Einschränkungen:
 2020-09-09: Mit der Funktion Fritzbox_Anrufbeantworter_GetMessageList() werden die auf dem Fritzbox hinterlegten Anrufe auf dem Anrufbeantworter ausgelesen. 
 
           Getestet mit Fritzbox 7530 SW 7.20, Fritzbox 6590 SW 7.20
+          getestet mit 7590 SW 8.03
 
 
 2020-09-12:
@@ -42,7 +43,7 @@ Einschränkungen:
             dass keine Nachricht vorhanden ist.         
 
 2025-06-23:
-         - transkirbierung ergänzt                  
+         - message download und transkirbierung ergänzt                  
 */
 
 
@@ -55,30 +56,30 @@ const debug = true;
 
 const transcribe = true;
 
-const azureKey = "E8....tfFC";
+const azureKey = "E8wFRibQwQEbgerEzLOQYpdSCaO2F0J2Fo2IXHH2Iz6Z6fNAuZXcJQQJ99BFAC5RqLJXJ3w3AAAYACOGtfFC";
 const azureTranscribeUrl = "https://westeurope.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15";
 var FormData = require('form-data');
 
-// für die FRitzbox
+// für die FRitzbox (DP des iobroker tr64 Adapters für soap Commandos)
 const DP_Fritzbox_tr64_Command = "tr-064.0.states.command";
 const DP_Fritzbox_tr64_CommandResult = "tr-064.0.states.command";
 
 
-const NewIndex_Anrufbeantworter = 1; //ID des Anrufbeantworters in der Fritzbox. Der erste Anrufbeantworter hat die ID 0
+const Index_Anrufbeantworter = 1; //ID des Anrufbeantworters in der Fritzbox. Der erste Anrufbeantworter hat die ID 0
 
-const DP_Fritzbox_AnrufbeantworterDaten_json = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterDaten_json";
-const DP_Fritzbox_AnrufbeantworterDatenAktualisieren = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterDatenAktualisieren";
-const DP_Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten";
-const DP_Fritzbox_AnrufbeantworterAnzahlNeueNachrichten = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterAnzahlNeueNachrichten"
-const DP_Fritzbox_AnrufbeantworterDeleteMessage = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterDeleteMessage";
-const DP_Fritzbox_AnrufbeantworterIndexMessage_json = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterIndexMessage_json";
+const DP_Fritzbox_AnrufbeantworterDaten_json = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDaten_json";
+const DP_Fritzbox_AnrufbeantworterDatenAktualisieren = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDatenAktualisieren";
+const DP_Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten";
+const DP_Fritzbox_AnrufbeantworterAnzahlNeueNachrichten = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterAnzahlNeueNachrichten"
+const DP_Fritzbox_AnrufbeantworterDeleteMessage = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDeleteMessage";
+const DP_Fritzbox_AnrufbeantworterIndexMessage_json = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterIndexMessage_json";
 
-const DP_Fritzbox_AnrufbeantworterLatestMessageIndex = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterLatestMessageIndex";
-const DP_Fritzbox_AnrufbeantworterLatestMessageData = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterLatestMessageData";
-const DP_Fritzbox_AnrufbeantworterLatestMessagePath = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterLatestMessagePath";
-const DP_Fritzbox_AnrufbeantworterLatestMessageTranskript = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_AnrufbeantworterLatestMessageTranskript";
+const DP_Fritzbox_AnrufbeantworterLatestMessageIndex = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageIndex";
+const DP_Fritzbox_AnrufbeantworterLatestMessageData = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageData";
+const DP_Fritzbox_AnrufbeantworterLatestMessagePath = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessagePath";
+const DP_Fritzbox_AnrufbeantworterLatestMessageTranskript = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageTranskript";
 
-const DP_Fritzbox_SessionId = "0_userdata.0.Telefon.Anrufbeantworter.Fritzbox_SessionId";
+const DP_Fritzbox_SessionId = "0_userdata.0.Telefon.Fritzbox_SessionId"; //session ID aus authentifizierung des adapters (oder eigenem login)
 
 
 ensureStateExists(DP_Fritzbox_AnrufbeantworterDaten_json, '{}', { name: 'JSON Struktur mit den Daten vom Anrufbeantworter aus der FritzBox', unit: '', type: 'string', role: 'value', def: '{}' });
@@ -94,7 +95,7 @@ ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageData, "{}", { name: '
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessagePath, "", { name: 'Pfad auf der Fritzbox zur letzten Anrufbeantworter Nachricht', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "", { name: 'Transkript zur letzten Anrufbeantworter Nachricht auf der Fritzbox', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 
-ensureStateExists(DP_Fritzbox_SessionId, 0, { name: 'SessionId für den Zugriff auf die Fritzbox', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
+ensureStateExists(DP_Fritzbox_SessionId, 0, { name: 'SessionId für den auhtentifizierten Zugriff auf die Fritzbox', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 
 
 // ==== States checken und ggf. anlegen====
@@ -117,7 +118,7 @@ async function ensureStateExists(id, initialValue, common) {
 
 function Fritzbox_Anrufbeantworter_DeleteMessage(NewMessageIndex) {
 
-    var befehl_DeleteMessage = '{"service": "urn:dslforum-org:service:X_AVM-DE_TAM:1","action": "DeleteMessage","params": {"NewIndex": "' + NewIndex_Anrufbeantworter + '", "NewMessageIndex": "' + NewMessageIndex + '" }}';
+    var befehl_DeleteMessage = '{"service": "urn:dslforum-org:service:X_AVM-DE_TAM:1","action": "DeleteMessage","params": {"NewIndex": "' + Index_Anrufbeantworter + '", "NewMessageIndex": "' + NewMessageIndex + '" }}';
     if (debug) { console.log("Soap Comand : " + befehl_DeleteMessage); }
     setState("tr-064.0.states.command", "{}");
     setState("tr-064.0.states.command", befehl_DeleteMessage); //Befehl zum loeschen einer Nachricht im Anrufbeantworter
@@ -170,21 +171,13 @@ AB_Index_DeleteMessageIndex.sendTo = function (text, subText = '', value = '', i
 
 
     json.push(
-
         {
-
             text: text,
-
             subText: subText,
-
             value: value,
-
             icon: icon,
-
             iconColor: iconColor,
-
         }
-
     )
 
     setState(DP_Fritzbox_AnrufbeantworterIndexMessage_json, JSON.stringify(json), true);
@@ -209,7 +202,7 @@ function Fritzbox_Anrufbeantworter_GetMessageList() {
 
     var Fritzbox_AnrufbeantworterDaten_json = "";
 
-    const befehl_GetMessageList = '{"service": "urn:dslforum-org:service:X_AVM-DE_TAM:1","action": "GetMessageList","params": {"NewIndex ": "' + NewIndex_Anrufbeantworter + '"}}';
+    const befehl_GetMessageList = '{"service": "urn:dslforum-org:service:X_AVM-DE_TAM:1","action": "GetMessageList","params": {"NewIndex ": "' + Index_Anrufbeantworter + '"}}';
     if (debug) { console.log("Soap Comand : " + befehl_GetMessageList); }
 
     setState("tr-064.0.states.command", "{}"); // wozu ist das gut? braucht man m.e. nicht. (übernommen aus frührer Version)
@@ -335,8 +328,13 @@ function Fritzbox_Anrufbeantworter_GetMessageList() {
                             setState(DP_Fritzbox_AnrufbeantworterLatestMessageIndex, latestMessageIndex);
 
                             const latestMessageData = TAMCalllist_JSON.Root.Message.find(msg => msg.Index[0] === String(latestMessageIndex)); // [0] weil immer alles arrays sind und der index mit ""
-                            setState(DP_Fritzbox_AnrufbeantworterLatestMessageData, JSON.stringify(latestMessageData));
-                            if (debug) { console.log("neuesten Message (nach Datum):" + JSON.stringify(latestMessageData)); }
+                             if (debug) { console.log("neuesten Message (nach Datum):" + JSON.stringify(latestMessageData)); }
+                           
+                            // array definiton für die message data entfernen, da überflüssig
+                            const flattened = Object.fromEntries(
+                            Object.entries(latestMessageData).map(([key, value]) => [key, value[0]]));
+                            if (debug) {console.log("no arrays anymore: " + JSON.stringify(flattened));}
+                            setState(DP_Fritzbox_AnrufbeantworterLatestMessageData, JSON.stringify(flattened));
 
                             const latestMessagePath = "http://" + fullCalllistUrl.host + latestMessageData.Path[0];
                             setState(DP_Fritzbox_AnrufbeantworterLatestMessagePath, latestMessagePath);
@@ -354,8 +352,9 @@ function Fritzbox_Anrufbeantworter_GetMessageList() {
                             httpPost(latestMessagePath,
                                 POSTData,
                                 {
-                                    validateCertificate: false,
+                                    timeout: 10000,
                                     responseType: 'arraybuffer',
+                                    validateCertificate: false,
                                     headers: {
                                         'User-Agent': 'iobroker Javascript)',
                                         'Accept': '*/*',
@@ -366,7 +365,7 @@ function Fritzbox_Anrufbeantworter_GetMessageList() {
                                 },
                                 function async(error, response) {
                                     if (error) {
-                                        log("Fehler beim WLAN-Zugriff: " + error, "error");
+                                        log("Fehler beim Message-Download: " + error, "error");
                                         return;
                                     } else {
                                         // hier noch check ergänzen, ob das wirklich eine wav datei ist...
@@ -507,31 +506,18 @@ Telefonnummer
 
 
 function telefonname() {
-
     var tokens = getState("tr-064.0.callmonitor.inbound.callerName").val.split(",");
-
     var answer = '';
-
     var vorname = tokens[1];
-
     var famname = tokens[0];
 
-
-
     if (famname === undefined) famname = '';
-
     if (vorname === undefined) vorname = '';
-
     if (vorname !== '' || famname !== '')
-
         answer = vorname + ' ' + famname;
-
     else
-
         answer = getState("tr-064.0.callmonitor.inbound.caller").val;
-
     return answer;
-
 }
 
 /*
@@ -552,21 +538,26 @@ bedeuten könnte
 
 on({ id: "tr-064.0.callmonitor.toPauseState", change: 'ne' }, function (obj) {
     setTimeout(function () {
-        if (getState('tr-064.0.callmonitor.toPauseState').val === 'end') {
-            var name = telefonname();
+        if (getState('tr-064.0.callmonitor.toPauseState').val === 'end') { //aktueller Call gerade zuende
+            var name = telefonname(); //name oder nummer rausfinden
             if (getState("tr-064.0.callmonitor.lastCall.type").val === 'missed') {
-                //    log(name + " hat aufgelegt und keine Nachricht hinterlassen");
+                if (debug) { console.log(name + " hat aufgelegt und keine Nachricht hinterlassen");}
             }
 
             if (getState("tr-064.0.callmonitor.lastCall.type").val === 'disconnect') {
-                if (getState('tr-064.0.callmonitor.lastCall.extension').val == 40) {
-                    if (debug) console.log(name + " hat auf den Anrufbeantworter gesprochen. Daten werden aus der Fritzbox ausgelesen...");
-                    Fritzbox_Anrufbeantworter_GetMessageList(); //Es werden die Informationen aus dem Anrufbeantworter in der Fritzbox ausgelesen
+                if (getState('tr-064.0.callmonitor.lastCall.extension').val == 40) {   //40 wohl AB nachricht, normal aufgelegt: 10
+                    if (debug) { 
+                        console.log(name + " hat auf den Anrufbeantworter gesprochen. Daten werden aus der Fritzbox ausgelesen...");
+                    }
+                    //Es werden nun die Informationen aus dem Anrufbeantworter in der Fritzbox ausgelesen
+                    Fritzbox_Anrufbeantworter_GetMessageList(); 
                 } else {
-                    //blub    log("Der Anruf von " + telefonname() + " hat " + getState("tr-064.0.callmonitor.lastCall.duration").val + " sec gedauert");
+                    if (debug)  { 
+                        console.log("Der Anruf von " + name + " hat " + getState("tr-064.0.callmonitor.lastCall.duration").val + " sec gedauert"); 
+                        console.log("lastCall.extension" + getState('tr-064.0.callmonitor.lastCall.extension'));
+                    }
                 }
             }
         }
     }, 3000);
-
 });
