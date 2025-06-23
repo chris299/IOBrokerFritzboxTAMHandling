@@ -55,7 +55,7 @@ const debug = true;
 
 const transcribe = true;
 
-const azureKey = "E8wFRibQwQEbgerEzLOQYpdSCaO2F0J2Fo2IXHH2Iz6Z6fNAuZXcJQQJ99BFAC5RqLJXJ3w3AAAYACOGtfFC";
+const azureKey = "E8....tfFC";
 const azureTranscribeUrl = "https://westeurope.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15";
 var FormData = require('form-data');
 
