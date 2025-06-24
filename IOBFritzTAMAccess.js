@@ -194,7 +194,7 @@ Anrufbeantworter via iobroker adapter (soap protokoll) aus. Ergebnis als JSON in
 in Datenpunkten gespeichert  wieviele Anrufe im Anrufbeantworter insgesamt vorliegen und wieviele neue Nachrichten vorhanden sind
 */
 
-function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
+async function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
     //Skript zum parsen von XML zu JSON: https://forum.iobroker.net/topic/623/gel%C3%B6st-xml-daten-einer-url-weiterverarbeiten/19
     //Damit das xml geparsed werden kann muss in der Javascript Instanz unter "Zusätzliche NPM Module" noch "xml2js" (mit Enter bestätigen) eintragen werden
 
@@ -206,33 +206,57 @@ function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
 
     var Fritzbox_AnrufbeantworterDaten_json = "";
 
-    const befehl_GetMessageList = '{"service": "urn:dslforum-org:service:X_AVM-DE_TAM:1","action": "GetMessageList","params": {"NewIndex ": "' + tam_index + '"}}';
-    if (debug) { console.log("Soap Comand : " + befehl_GetMessageList); }
+    /*
+{
+  "service": "urn:dslforum-org:service:X_AVM-DE_TAM:1",
+  "action": "GetList",
+  "params": {}
+}
 
-    setState("tr-064.0.states.command", "{}"); // wozu ist das gut? braucht man m.e. nicht. (übernommen aus frührer Version)
-    setState("tr-064.0.states.command", befehl_GetMessageList); //Befehl zum auslesen der Anrufbeantworterdaten in Datenpunkt schreiben
+gibt alle AB infos
 
-    if (debug) console.log("Antwort auf command im State tr-064.0.states.commandResult: " + getState("tr-064.0.states.commandResult").val);
+{"NewTAMList":"<List><TAMRunning>1</TAMRunning><Stick>2</Stick><Status>0</Status><Capacity>733</Capacity><Item><Index>0</Index><Display>1</Display><Enable>0</Enable><Name>Anrufbeantworter 1</Name></Item><Item><Index>1</Index><Display>1</Display><Enable>1</Enable><Name>Anrufbeantworter w</Name></Item><Item><Index>2</Index><Display>0</Display><Enable>0</Enable><Name></Name></Item><Item><Index>3</Index><Display>0</Display><Enable>0</Enable><Name></Name></Item><Item><Index>4</Index><Display>0</Display><Enable>0</Enable><Name></Name></Item></List>\n"}
 
-    setState(DP_Fritzbox_AnrufbeantworterIndexMessage_json, "");  //Setzt den aktuellen Inhalt vom Datenpunkt zurück, damit im Verlauf die Index Nummer von den Anrufen neu geschrieben werden können
+damit muss man ggf. multiple ABs einrichten (in <Item>)
+
+    */
+
+    const SoapCommand = '{"service": "urn:dslforum-org:service:X_AVM-DE_TAM:1","action": "GetMessageList","params": {"NewIndex ": "' + String(tam_index) + '"}}';
+    if (debug) { console.log("Soap Comand : " + SoapCommand); }
+
+    // setState("tr-064.0.states.command", "{}"); // wozu ist das gut? braucht man m.e. nicht. (übernommen aus frührer Version)
+    await setStateAsync("tr-064.0.states.command", SoapCommand); //Befehl zum auslesen der Anrufbeantworterdaten in Datenpunkt schreiben
+
+
+    await setStateAsync(DP_Fritzbox_AnrufbeantworterIndexMessage_json, "");  //Setzt den aktuellen Inhalt vom Datenpunkt zurück, damit im Verlauf die Index Nummer von den Anrufen neu geschrieben werden können
 
 
     //Das Ergebnis im Datenpunkt commandResult ist ein Link auf ein XML welches die Informationen zu den Anrufen auf dem
     //Anrufbeantworter enthält. Das Ergebnis hat folgendes Format: {"NewURL":"http://192.168.178.1:49000/tamcalllist.lua?sid=2a4abe5e5ad61b64&tamindex=0"}
     //Aus diesem String wird mittels substring der eigentliche Link (url) extrahiert
 
-    Result_Fritzbox_HyperlinkXmlTAM = getState("tr-064.0.states.commandResult").val;
-    Result_Fritzbox_HyperlinkXmlTAM = Result_Fritzbox_HyperlinkXmlTAM.substring(11, getState("tr-064.0.states.commandResult").val.length - 2);  //die reine URL wird extrahiert
+
+    await wait(500);
+    // manchmal kommt anscheinend erstmal ein error 500 (interner server error) von der Fritzbox zurück. muss man nochmal beobachten
+    // evtl. muss man hier auch einfach etwas warten.... 100-200 ms sollten das schon sein
+
+    const SoapResponse = await getStateAsync("tr-064.0.states.commandResult");
+    if (debug) console.log("Antwort auf command im State tr-064.0.states.commandResult: " + SoapResponse.val);
+    if (SoapResponse.val === '{"code":500}') { log("soap command returned 500", "error"); return; } //abbruch bei result code 500
+
+
+
+    //const Result_Fritzbox_HyperlinkXmlTAM = SoapResponse.substring(11, getState("tr-064.0.states.commandResult").val.length - 2);  //die reine URL wird extrahiert
 
 
     // alternative URL und sid extarktion:
 
-    const befehl_result = getState("tr-064.0.states.commandResult").val;
+    //const befehl_result = getState("tr-064.0.states.commandResult").val;
 
-    if (debug) { console.log("Antwort auf command im State tr-064.0.states.commandResult: " + befehl_result); }
+    // if (debug) { console.log("Antwort auf command im State tr-064.0.states.commandResult: " + befehl_result); }
     //anscheinend typeofval === string, wäre ggf. nochmal abzusichern.
     // JSON in Objekt umwandeln
-    const parsedResult = JSON.parse(befehl_result);
+    const parsedResult = JSON.parse(SoapResponse.val);
 
     // URL extrahieren
 
@@ -250,12 +274,12 @@ function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
 
     if (debug) { console.log("sid : " + sid + " ; tamindex : " + tamindex); }
 
-    if (debug) console.log("Extrahierter Hyperlink aus commandresult. CommandResult: " + getState("tr-064.0.states.commandResult").val + " und der extrahierte Link: " + Result_Fritzbox_HyperlinkXmlTAM);
+   // if (debug) console.log("Extrahierter Hyperlink aus commandresult. CommandResult: " + getState("tr-064.0.states.commandResult").val + " und der extrahierte Link: " + Result_Fritzbox_HyperlinkXmlTAM);
 
 
     //Das XML File wird abgeholt, geparst und in eine JSON Struktur umgewandelt       
 
-    httpGet(Result_Fritzbox_HyperlinkXmlTAM, function (error, response) {  // müsste man eigentlich auch per POST machen... geht aber anscheinend auch so
+    httpGet(parsedResult.NewURL, function (error, response) {  // müsste man eigentlich auch per POST machen... geht aber anscheinend auch so
 
         if (!error && response.statusCode == 200) {
 
@@ -332,12 +356,12 @@ function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
                             setState(DP_Fritzbox_AnrufbeantworterLatestMessageIndex, latestMessageIndex);
 
                             const latestMessageData = TAMCalllist_JSON.Root.Message.find(msg => msg.Index[0] === String(latestMessageIndex)); // [0] weil immer alles arrays sind und der index mit ""
-                             if (debug) { console.log("neuesten Message (nach Datum):" + JSON.stringify(latestMessageData)); }
-                           
+                            if (debug) { console.log("neuesten Message (nach Datum):" + JSON.stringify(latestMessageData)); }
+
                             // array definiton für die message data entfernen, da überflüssig
                             const flattened = Object.fromEntries(
-                            Object.entries(latestMessageData).map(([key, value]) => [key, value[0]]));
-                            if (debug) {console.log("no arrays anymore: " + JSON.stringify(flattened));}
+                                Object.entries(latestMessageData).map(([key, value]) => [key, value[0]]));
+                            if (debug) { console.log("no arrays anymore: " + JSON.stringify(flattened)); }
                             setState(DP_Fritzbox_AnrufbeantworterLatestMessageData, JSON.stringify(flattened));
 
                             const latestMessagePath = "http://" + fullCalllistUrl.host + latestMessageData.Path[0];
@@ -380,9 +404,9 @@ function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
 
                                         // Use the new path in other scripts (e.g. sendTo)
                                         if (sendAudio) {
-                                            sendTo('email.1', 'send', { 
-                                                text: 'Neue AB Nachricht im Anhang', to: 'c@vme.de', subject: 'Neue AB Nachricht', 
-                                                attachments:[ { path: tempFilePath, cid: 'message.wav' },],
+                                            sendTo('email.1', 'send', {
+                                                text: 'Neue AB Nachricht im Anhang', to: 'c@vme.de', subject: 'Neue AB Nachricht',
+                                                attachments: [{ path: tempFilePath, cid: 'message.wav' },],
                                             }
                                             );
                                         };
@@ -399,7 +423,7 @@ function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
                                             data.append('audio', fs.createReadStream(tempFilePath));
 
                                             if (debug) {
-                                                console.log ("post form data für azure transcribe:")
+                                                console.log("post form data für azure transcribe:")
                                                 console.log(data);
                                             }
 
@@ -424,7 +448,7 @@ function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
                                                         console.log(JSON.stringify(response.data));
                                                         console.log(JSON.stringify("Transkript : " + response.data.combinedPhrases?.[0]?.text));
                                                     }
-                                                    setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript,  (response.data.combinedPhrases?.[0]?.text || ""));
+                                                    setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, (response.data.combinedPhrases?.[0]?.text || ""));
                                                 })
                                                 .catch(function (error) {
                                                     console.log(error);
@@ -559,23 +583,23 @@ on({ id: "tr-064.0.callmonitor.toPauseState", change: 'ne' }, function (obj) {
         if (getState('tr-064.0.callmonitor.toPauseState').val === 'end') { //aktueller Call gerade zuende
             var name = telefonname(); //name oder nummer rausfinden
             if (getState("tr-064.0.callmonitor.lastCall.type").val === 'missed') {
-                if (debug) { console.log(name + " hat aufgelegt und keine Nachricht hinterlassen");}
+                if (debug) { console.log(name + " hat aufgelegt und keine Nachricht hinterlassen"); }
             }
 
             if (getState("tr-064.0.callmonitor.lastCall.type").val === 'disconnect') {
                 //40 - 49 AB nachricht
                 const callPort = getState('tr-064.0.callmonitor.lastCall.extension').val;
-                const TAMIndex = callPort - 40 ;
-                if (callPort >= 40 && callPort <= 49) {   
-                    if (debug) { 
+                const TAMIndex = callPort - 40;
+                if (callPort >= 40 && callPort <= 49) {
+                    if (debug) {
                         console.log(name + " hat auf den Anrufbeantworter " + TAMIndex + " gesprochen. Daten werden aus der Fritzbox ausgelesen...");
                     }
                     //Es werden nun die Informationen aus dem Anrufbeantworter in der Fritzbox ausgelesen
-                    Fritzbox_Anrufbeantworter_GetMessageList(TAMIndex); 
+                    Fritzbox_Anrufbeantworter_GetMessageList(TAMIndex);
                 } else {
-                    if (debug)  { 
+                    if (debug) {
                         console.log("Der Anruf von " + name + " hat " + getState("tr-064.0.callmonitor.lastCall.duration").val + " sec gedauert");  // falscher name bei outbound...
-                        console.log("lastCall.extension : " + getState('tr-064.0.callmonitor.lastCall.extension').val );
+                        console.log("lastCall.extension : " + getState('tr-064.0.callmonitor.lastCall.extension').val);
                     }
                 }
             }
