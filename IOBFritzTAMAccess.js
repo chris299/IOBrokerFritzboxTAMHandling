@@ -56,6 +56,7 @@ const debug = true;
 // für das transkript per Azure Speech services
 
 const transcribe = true;
+const sendAudio = true; // muss man in Zeile 380 ff. konfigurieren
 
 const azureKey = "E8wFRibQwQEbgerEzLOQYpdSCaO2F0J2Fo2IXHH2Iz6Z6fNAuZXcJQQJ99BFAC5RqLJXJ3w3AAAYACOGtfFC";
 const azureTranscribeUrl = "https://westeurope.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15";
@@ -346,11 +347,8 @@ function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
 
                             // wav datei abholen und in ein tempFile schreiben
 
-
                             const POSTData = `sid=${encodeURIComponent(sid)}`;
                             if (debug) { console.log("wav download : " + latestMessagePath + "  ; post data : " + POSTData); }
-
-
 
                             httpPost(latestMessagePath,
                                 POSTData,
@@ -371,16 +369,24 @@ function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
                                         log("Fehler beim Message-Download: " + error, "error");
                                         return;
                                     } else {
-                                        // hier noch check ergänzen, ob das wirklich eine wav datei ist...
+                                        // hier evtl. noch check ergänzen, ob das wirklich eine wav datei ist...
                                         const tempFilePath = createTempFile('message.wav', response.data);
-
-                                        // Use the new path in other scripts (e.g. sendTo)
 
                                         //if (debug) { console.log(response.data); }
                                         if (debug) {
                                             console.log("response header:" + response.headers)
                                             console.log(`Saved to ${tempFilePath}`);
                                         }
+
+                                        // Use the new path in other scripts (e.g. sendTo)
+                                        if (sendAudio) {
+                                            sendTo('email.1', 'send', { 
+                                                text: 'Neue AB Nachricht im Anhang', to: 'c@vme.de', subject: 'Neue AB Nachricht', 
+                                                attachments:[ { path: tempFilePath, cid: 'message.wav' },],
+                                            }
+                                            );
+                                        };
+
                                         // temp file transkribieren wenn entsprechend konfiguriert
 
                                         if (transcribe) {
