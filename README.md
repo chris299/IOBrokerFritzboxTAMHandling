@@ -5,10 +5,10 @@ Script to manage and transcribe AnsweringMachine Message on AVM Fritzbox
 
 often difficult to hear messages, so it makes sense to get a quicker idea of the content by reading the transcript
 
-## usage
+## Usage
 The script to send transcript is separate and triggered by new transcript in iobroker datapoint
 
-## setup Azure Keys for Microsoft Speech service free tier
+## Setup Azure Keys for Microsoft Speech service free tier
 
 you need an instance of the speech service. currently the free tier is only available in region westeeurope, not in region germany....
 
@@ -24,7 +24,7 @@ you need an instance of the speech service. currently the free tier is only avai
 - Sending of wav files is not supported yet
 
 
-### helpful URLs
+### Helpful URLs
 
 documentation of IOBroker Javascript possibilities:
 https://github.com/ioBroker/ioBroker.javascript/blob/master/docs/en/javascript.md#httpget
