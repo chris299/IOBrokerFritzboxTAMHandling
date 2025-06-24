@@ -10,7 +10,7 @@ The script to send transcript is separate and triggered by new transcript in iob
 
 ## Setup Azure Keys for Microsoft Speech service free tier
 
-you need an instance of the speech service. currently the free tier is only available in region westeeurope, not in region germany....
+you need an instance of the speech service. Currently the free tier is only available in region westeurope, not in region germany....
 
 ![grafik](https://github.com/user-attachments/assets/52b479be-0c2e-423d-b68f-a914162497a0)
 
