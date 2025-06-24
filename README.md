@@ -35,12 +35,18 @@ https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHu
 - Sending of wav files is possible, but not nicely integrated to be used with other scripts (needs patching of script)
 
 
+## Credits
+based on the work of @Feuersturm
+https://forum.iobroker.net/topic/14288/tr-064-fritzbox-anrufbeantworter
+and some other scripts from the IOBroker Forum
+
 ### Helpful URLs
 
 documentation of IOBroker Javascript possibilities:
 https://github.com/ioBroker/ioBroker.javascript/blob/master/docs/en/javascript.md#httpget
 https://forum.iobroker.net/topic/36999/neu-diverse-async-funktionen-im-javascript-adapter
 
+https://forum.iobroker.net/topic/81240/getstate-ohne-mit-await
 #### TR64 for Fritz TAM
 
 https://fritz.com/service/schnittstellen/
