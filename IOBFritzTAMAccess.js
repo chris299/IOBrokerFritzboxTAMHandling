@@ -128,7 +128,7 @@ function Fritzbox_Anrufbeantworter_DeleteMessage(NewMessageIndex) {
     setState("tr-064.0.states.command", befehl_DeleteMessage); //Befehl zum loeschen einer Nachricht im Anrufbeantworter
     if (debug) console.log("Antwort auf command im State tr-064.0.states.commandResult: " + getState("tr-064.0.states.commandResult").val);
 
-    Fritzbox_Anrufbeantworter_GetMessageList();
+    Fritzbox_Anrufbeantworter_GetMessageList(Index_Anrufbeantworter);
 }
 
 on({ id: DP_Fritzbox_AnrufbeantworterDeleteMessage, change: 'any' }, function (obj) {
@@ -474,7 +474,7 @@ function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
 //Über Datenpunkt kann manuell das Auslesen der Daten aus dem Anrufbeantworter getriggert werden
 
 on({ id: DP_Fritzbox_AnrufbeantworterDatenAktualisieren, change: 'any' }, function (obj) {
-    Fritzbox_Anrufbeantworter_GetMessageList();
+    Fritzbox_Anrufbeantworter_GetMessageList(Index_Anrufbeantworter);
 });
 
 
