@@ -41,8 +41,11 @@ documentation of IOBroker Javascript possibilities:
 https://github.com/ioBroker/ioBroker.javascript/blob/master/docs/en/javascript.md#httpget
 https://forum.iobroker.net/topic/36999/neu-diverse-async-funktionen-im-javascript-adapter
 
-TR64 for Fritz TAM
+#### TR64 for Fritz TAM
+
 https://fritz.com/service/schnittstellen/
+
 https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/x_contactSCPD.pdf    
+
 https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/x_tam.pdf
 
