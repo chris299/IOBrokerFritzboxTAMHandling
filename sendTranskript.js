@@ -9,7 +9,7 @@ on({ id: [].concat(['0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_Anrufbeant
   message = ['Transkript der Nachricht von: ',name2,' Nummer : ',nummer,' Nachricht : ',getState('0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageTranskript').val].join('');
   sendTo('email.1', 'send', {
     text: message,
-    to: 'c@vme.de',
+    to: 'test@test.de',
     subject: 'AB message transkript',
   });
   sendTo("whatsapp-cmb.0", "send", {
