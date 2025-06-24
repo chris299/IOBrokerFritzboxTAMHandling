@@ -21,7 +21,7 @@ you need an instance of the speech service. Currently the free tier is only avai
 
 ## ToDo
 - Multiple TAMs not supported yet
-- Sending of wav files is not supported yet
+- Sending of wav files is possible, but not nicely integrated to be used with other scripts (needs patching of script)
 
 
 ### Helpful URLs
