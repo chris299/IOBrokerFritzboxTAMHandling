@@ -8,6 +8,10 @@ often difficult to hear messages, so it makes sense to get a quicker idea of the
 ## Usage
 The script to send transcript is separate and triggered by new transcript in iobroker datapoint
 
+## Requirements
+setup and running TR-064 adapter in IOBroker (and Javascript Adapter of course)
+https://github.com/iobroker-community-adapters/ioBroker.tr-064
+
 ## Setup Azure Keys for Microsoft Speech service free tier
 
 you need an instance of the speech service. Currently the free tier is only available in region westeurope, not in region germany....
