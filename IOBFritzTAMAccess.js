@@ -43,7 +43,8 @@ Einschränkungen:
             dass keine Nachricht vorhanden ist.         
 
 2025-06-23:
-         - message download und transkirbierung ergänzt                  
+         - message download und transkirbierung ergänzt        
+         - multi-AB angefangen, siehe auch https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/x_contactSCPD.pdf          
 */
 
 
@@ -65,7 +66,9 @@ const DP_Fritzbox_tr64_Command = "tr-064.0.states.command";
 const DP_Fritzbox_tr64_CommandResult = "tr-064.0.states.command";
 
 
-const Index_Anrufbeantworter = 1; //ID des Anrufbeantworters in der Fritzbox. Der erste Anrufbeantworter hat die ID 0
+const Index_Anrufbeantworter = 1; //ID des hier zu verwendenden Anrufbeantworters in der Fritzbox. Der erste Anrufbeantworter hat die ID 0
+
+// noch nicht vollständig flexibilisiert und ggf. für mehrere ABs funktional
 
 const DP_Fritzbox_AnrufbeantworterDaten_json = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDaten_json";
 const DP_Fritzbox_AnrufbeantworterDatenAktualisieren = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDatenAktualisieren";
@@ -190,7 +193,7 @@ Anrufbeantworter via iobroker adapter (soap protokoll) aus. Ergebnis als JSON in
 in Datenpunkten gespeichert  wieviele Anrufe im Anrufbeantworter insgesamt vorliegen und wieviele neue Nachrichten vorhanden sind
 */
 
-function Fritzbox_Anrufbeantworter_GetMessageList() {
+function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
     //Skript zum parsen von XML zu JSON: https://forum.iobroker.net/topic/623/gel%C3%B6st-xml-daten-einer-url-weiterverarbeiten/19
     //Damit das xml geparsed werden kann muss in der Javascript Instanz unter "Zusätzliche NPM Module" noch "xml2js" (mit Enter bestätigen) eintragen werden
 
@@ -202,7 +205,7 @@ function Fritzbox_Anrufbeantworter_GetMessageList() {
 
     var Fritzbox_AnrufbeantworterDaten_json = "";
 
-    const befehl_GetMessageList = '{"service": "urn:dslforum-org:service:X_AVM-DE_TAM:1","action": "GetMessageList","params": {"NewIndex ": "' + Index_Anrufbeantworter + '"}}';
+    const befehl_GetMessageList = '{"service": "urn:dslforum-org:service:X_AVM-DE_TAM:1","action": "GetMessageList","params": {"NewIndex ": "' + tam_index + '"}}';
     if (debug) { console.log("Soap Comand : " + befehl_GetMessageList); }
 
     setState("tr-064.0.states.command", "{}"); // wozu ist das gut? braucht man m.e. nicht. (übernommen aus frührer Version)
@@ -531,8 +534,17 @@ Es werden dazu 'callmonitor.lastCall.type' und
 Mangels Dok wurde durch Ausprobieren ermittelt, dass
 - type === missed                        : es wurde aufgelegt und nicht gesprochen.
 - type === disconnect && extension !== 40: Gespräch wurde geführt und dann aufgelegt
-- type === disconnect && extension === 40: Nachricht auf AB
+- type === disconnect && extension === 40: Nachricht auf AB 0
 bedeuten könnte
+
+extension scheint die scheint der port des calls zu sein ( eine etwas unglpckliche übersetzung)
+gem.  https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/x_contactSCPD.pdf
+"5.2 Call List Content
+The following shows an example XML content for a call list.
+To differ between voice calls, fax calls and TAM calls use the Port value.
+E.g. if port equals 5 it is a fax call. If port equals 6 or port in in the rage of 40 to 49 it is a
+TAM call."
+
 */
 
 
@@ -545,16 +557,19 @@ on({ id: "tr-064.0.callmonitor.toPauseState", change: 'ne' }, function (obj) {
             }
 
             if (getState("tr-064.0.callmonitor.lastCall.type").val === 'disconnect') {
-                if (getState('tr-064.0.callmonitor.lastCall.extension').val == 40) {   //40 wohl AB nachricht, normal aufgelegt: 10
+                //40 - 49 AB nachricht
+                const callPort = getState('tr-064.0.callmonitor.lastCall.extension').val;
+                const TAMIndex = callPort - 40 ;
+                if (callPort >= 40 && callPort <= 49) {   
                     if (debug) { 
-                        console.log(name + " hat auf den Anrufbeantworter gesprochen. Daten werden aus der Fritzbox ausgelesen...");
+                        console.log(name + " hat auf den Anrufbeantworter " + TAMIndex + " gesprochen. Daten werden aus der Fritzbox ausgelesen...");
                     }
                     //Es werden nun die Informationen aus dem Anrufbeantworter in der Fritzbox ausgelesen
-                    Fritzbox_Anrufbeantworter_GetMessageList(); 
+                    Fritzbox_Anrufbeantworter_GetMessageList(TAMIndex); 
                 } else {
                     if (debug)  { 
-                        console.log("Der Anruf von " + name + " hat " + getState("tr-064.0.callmonitor.lastCall.duration").val + " sec gedauert"); 
-                        console.log("lastCall.extension" + getState('tr-064.0.callmonitor.lastCall.extension'));
+                        console.log("Der Anruf von " + name + " hat " + getState("tr-064.0.callmonitor.lastCall.duration").val + " sec gedauert");  // falscher name bei outbound...
+                        console.log("lastCall.extension : " + getState('tr-064.0.callmonitor.lastCall.extension').val );
                     }
                 }
             }
