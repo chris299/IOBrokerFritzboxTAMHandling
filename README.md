@@ -1,5 +1,5 @@
 # IOBrokerFritzboxTAMHandling
-Script to manage and transcribe AnsweringMachine Message on AVM Fritzbox
+Script to manage and transcribe answering machine messages on AVM Fritzbox with IOBroker.
 
 ## Motivation
 
