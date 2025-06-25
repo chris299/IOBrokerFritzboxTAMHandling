@@ -1,0 +1,213 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <variables>
+    <variable id="$+T9Wh|G3jx[]I6i.0od">name</variable>
+    <variable id="0a$fPUPpYM]LNSzF}xT^">nummer</variable>
+    <variable id="M!O:UIdh+T_C{PQYv~6c">message</variable>
+  </variables>
+  <block type="on_ext" id="~uy_(`x`#{Z/dsMUfcR0" x="188" y="212">
+    <mutation xmlns="http://www.w3.org/1999/xhtml" items="1"></mutation>
+    <field name="CONDITION">ne</field>
+    <field name="ACK_CONDITION"></field>
+    <value name="OID0">
+      <shadow type="field_oid" id="PSNQkBM9mFSpE7dolGcF">
+        <field name="oid">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageTranskript</field>
+      </shadow>
+    </value>
+    <statement name="STATEMENT">
+      <block type="debug" id="5neGaa2tL.u^5H;W85XJ" disabled="true">
+        <field name="Severity">info</field>
+        <value name="TEXT">
+          <shadow type="text" id=",NlK.+B0Jc*TliqMW%$R">
+            <field name="TEXT">test</field>
+          </shadow>
+          <block type="convert_json2object" id="ECHgF3yGzF)ktl3AE]Dv">
+            <value name="VALUE">
+              <block type="get_value" id="Un[Ww7RzieoLA.f2GA5i">
+                <field name="ATTR">val</field>
+                <field name="OID">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageData</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <next>
+          <block type="debug" id="110|jD4(QcUwaK~lx,yK" disabled="true">
+            <field name="Severity">info</field>
+            <value name="TEXT">
+              <shadow type="text" id="TZkaB|,]zNYtb,Y)oA0a">
+                <field name="TEXT">AB transkript versenden per mail</field>
+              </shadow>
+              <block type="object_keys" id=";*UdCWo8,T8PWXMs$%Gl">
+                <value name="OBJECT">
+                  <shadow type="get_object" id="HSh|}8PQ,lRV*Xf.:sN@">
+                    <field name="OID">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageData</field>
+                  </shadow>
+                  <block type="convert_json2object" id="O0.66ofIbAX:RyvV#Bkn">
+                    <value name="VALUE">
+                      <block type="get_value" id="/#||Bq0Y$Fs@n|t,;l[q">
+                        <field name="ATTR">val</field>
+                        <field name="OID">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageData</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="vlZh;e=*Q9)l15W?2[{5">
+                <field name="VAR" id="$+T9Wh|G3jx[]I6i.0od">name</field>
+                <value name="VALUE">
+                  <block type="get_attr" id="K,#q2.%iGYe$J_q=,ZYg">
+                    <value name="PATH">
+                      <shadow type="text" id="van(qz7A.7|^1mHZ6p~,">
+                        <field name="TEXT">Name</field>
+                      </shadow>
+                    </value>
+                    <value name="OBJECT">
+                      <shadow type="get_object" id="Mejl45BI6HE1:#O#9P)/">
+                        <field name="OID">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageData</field>
+                      </shadow>
+                      <block type="convert_json2object" id="K/=X7d6o^4Z)l7bHx`d6">
+                        <value name="VALUE">
+                          <block type="get_value" id="tjj#Mth.=K`Xf:V9kxZ0">
+                            <field name="ATTR">val</field>
+                            <field name="OID">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageData</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="fIeCkw(-P^e[(0~$Pk`T">
+                    <field name="VAR" id="0a$fPUPpYM]LNSzF}xT^">nummer</field>
+                    <value name="VALUE">
+                      <block type="get_attr" id="?`=pQN!ldFDG[qTon##s">
+                        <value name="PATH">
+                          <shadow type="text" id="[P;n)j{RDccTYj)#h,`H">
+                            <field name="TEXT">Number</field>
+                          </shadow>
+                        </value>
+                        <value name="OBJECT">
+                          <shadow type="get_object" id=")gTI*e_V8V4S6kq{1wI*">
+                            <field name="OID">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageData</field>
+                          </shadow>
+                          <block type="convert_json2object" id="r.;G;V[SYoYpC)m2D2Es">
+                            <value name="VALUE">
+                              <block type="get_value" id="H$7MplO?MEd+%Ek*;7jR">
+                                <field name="ATTR">val</field>
+                                <field name="OID">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageData</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="l!Zq-t]Np(bT;`2R2_Yx">
+                        <field name="VAR" id="M!O:UIdh+T_C{PQYv~6c">message</field>
+                        <value name="VALUE">
+                          <block type="text_join" id="C`zF]-X3`9{$+-Q=La(N">
+                            <mutation items="6"></mutation>
+                            <value name="ADD0">
+                              <block type="text" id="7=[qu}%(WRcl1`mRCJPW">
+                                <field name="TEXT">Transkript der Nachricht von: </field>
+                              </block>
+                            </value>
+                            <value name="ADD1">
+                              <block type="variables_get" id="lp6:PL$VKs?u[fO1?T-r">
+                                <field name="VAR" id="$+T9Wh|G3jx[]I6i.0od">name</field>
+                              </block>
+                            </value>
+                            <value name="ADD2">
+                              <block type="text" id="p,C^XRUMZZ%y^f}voM@G">
+                                <field name="TEXT"> Nummer : </field>
+                              </block>
+                            </value>
+                            <value name="ADD3">
+                              <block type="variables_get" id="6Zo]w1P#qf`$TDOZkh$p">
+                                <field name="VAR" id="0a$fPUPpYM]LNSzF}xT^">nummer</field>
+                              </block>
+                            </value>
+                            <value name="ADD4">
+                              <block type="text" id="Is!zT=J[;;ezDvvTO8TH">
+                                <field name="TEXT"> Nachricht : </field>
+                              </block>
+                            </value>
+                            <value name="ADD5">
+                              <block type="get_value" id="k/5n5KWroQf4x5tuY2`y">
+                                <field name="ATTR">val</field>
+                                <field name="OID">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageTranskript</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="debug" id="27jR6C[lf!Evmob)%]lD" disabled="true">
+                            <field name="Severity">info</field>
+                            <value name="TEXT">
+                              <shadow type="text" id="TZkaB|,]zNYtb,Y)oA0a">
+                                <field name="TEXT">AB transkript versenden per mail</field>
+                              </shadow>
+                              <block type="variables_get" id="#K`mjDh)nx0H.[3yrc[F">
+                                <field name="VAR" id="M!O:UIdh+T_C{PQYv~6c">message</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="email" id="r#?8uVJdHT1TJG0YGMm=">
+                                <field name="INSTANCE">.1</field>
+                                <field name="IS_HTML">FALSE</field>
+                                <field name="LOG"></field>
+                                <value name="TO">
+                                  <shadow type="text" id="{teiMz+yFWJ[=yd=lB2P">
+                                    <field name="TEXT">c@vme.de</field>
+                                  </shadow>
+                                </value>
+                                <value name="TEXT">
+                                  <shadow type="text" id="Nca9%p;}UMiFT*aAfl5)">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="variables_get" id="~8+6Bp_`RS8=Wj(jhz-J">
+                                    <field name="VAR" id="M!O:UIdh+T_C{PQYv~6c">message</field>
+                                  </block>
+                                </value>
+                                <value name="SUBJECT">
+                                  <shadow type="text" id="UE~G~9)6YfvQmeZV#?rx">
+                                    <field name="TEXT">AB message transkript</field>
+                                  </shadow>
+                                </value>
+                                <value name="FILE_1">
+                                  <block type="get_value" id="jOL~Jd0k}/jC!0?+j;}$">
+                                    <field name="ATTR">val</field>
+                                    <field name="OID">0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageLocalPath</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="whatsapp-cmb" id=":s6Oat`o)DRX^Sy`!@rG">
+                                    <field name="INSTANCE">.0</field>
+                                    <field name="LOG"></field>
+                                    <value name="MESSAGE">
+                                      <shadow type="text" id="lu=G:MLACq|Y1`wl,p$w">
+                                        <field name="TEXT">text</field>
+                                      </shadow>
+                                      <block type="variables_get" id="$$8mBzT[:}HtrZ{g6}*M">
+                                        <field name="VAR" id="M!O:UIdh+T_C{PQYv~6c">message</field>
+                                      </block>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+</xml>
