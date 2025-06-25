@@ -59,17 +59,18 @@ const debug = true;
 // für das transkript per Azure Speech services
 
 const transcribe = true;
-const sendAudio = false; // muss man in Zeile 410 ff. konfigurieren
+const sendAudio = false; // muss man ggf in Zeile 410 ff. konfigurieren, besser verwendet man aber den localPth Datenpunkt und sendet mit einem anderen script
 
-const azureKey = "E8wFRib***********************************************YACOGtfFC"; // put your key here...
+const azureKey = "E8wFRibQw**************************************************ACOGtfFC"; // put your key here....
 const azureTranscribeUrl = "https://westeurope.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15";
 const TAMexpectedLanguage = "de-DE";  //iso code for expected language for transcription
 
 var FormData = require('form-data');
 
 // für die FRitzbox (DP des iobroker tr64 Adapters für soap Commandos)
-const DP_Fritzbox_tr64_Command = "tr-064.0.states.command";
-const DP_Fritzbox_tr64_CommandResult = "tr-064.0.states.commandResult";
+const DP_tr64_adapter_base = "tr-064.0.";
+const DP_Fritzbox_tr64_Command = DP_tr64_adapter_base + "states.command";
+const DP_Fritzbox_tr64_CommandResult = DP_tr64_adapter_base + "states.commandResult";
 
 const DP_Fritzbox_SessionId = "0_userdata.0.Telefon.Fritzbox_SessionId"; //session ID aus authentifizierung des adapters (oder eigenem login)
 
@@ -409,11 +410,11 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                     } else {
                                         // hier noch check , ob da wirklich eine wav datei zurück gekommen ist...
                                         const byteArray = new Uint8Array(response.data);
-                                        if (!isValidWav(byteArray)) {log("maybe not valid WAV", "warn");} else { if (debug) {log("Wav format test success");} }
+                                        if (!isValidWav(byteArray)) { log("maybe not valid WAV", "warn"); } else { if (debug) { log("Wav format test success"); } }
                                         // als datei temporär abspeichern
                                         const tempFilePath = createTempFile('message.wav', response.data);
                                         // temp pfad im iobroker verfügbar machen
-                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath,tempFilePath);
+                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath, tempFilePath);
 
                                         //if (debug) { console.log(response.data); }
                                         if (debug) {
@@ -464,19 +465,29 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                             axios(config)
                                                 .then(function (response) {
                                                     if (debug) {
-                                                        console.log(JSON.stringify(response.data));
+                                                        console.log("Axios raw Response Data: " + JSON.stringify(response.data));
                                                         console.log(JSON.stringify("Transkript : " + response.data.combinedPhrases?.[0]?.text));
                                                     }
-                                                    if (response.data.combinedPhrases?.[0]?.text==="") {
+                                                    if (response.data.combinedPhrases?.[0]?.text === "") {
                                                         setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkript leer");
                                                     } else {
                                                         setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, (response.data.combinedPhrases?.[0]?.text || "undefiniert"));
                                                     }
                                                 })
                                                 .catch(function (error) {
-                                                    log(error, "error");
-                                                    log(JSON.stringify(response.data), "error");
-                                                    setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkription fehlgeschlagen");
+                                                    const statusCode = error.response?.status;
+                                                    const responseData = error.response?.data;
+
+                                                    // log(error, "error"); // gibt zuviel info zurück :))
+                                                    log("raw axios response data: " + JSON.stringify(responseData), "error");
+
+                                                    if (statusCode === 401) {
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Azure permission denied; Transkription fehlgeschlagen");
+                                                    } else if (statusCode === 400) {
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Ungültige Anfrage (400); Transkription fehlgeschlagen");
+                                                    } else {
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkription fehlgeschlagen, unbekannter Grund");
+                                                    }
                                                 });
 
                                         }
@@ -580,10 +591,10 @@ function isValidWav(wavBytes) {
 
 // test wav file, Kann direkt mit new Blob([wavData.buffer], {type: "audio/wav"}) verwendet werden.
 const TestWavData = new Uint8Array([
-  82, 73, 70, 70, 116, 0, 0, 0, 87, 65, 86, 69, 102, 109, 116, 32, 16, 0, 0, 0, 1, 0, 1, 0, 64, 31, 0, 0, 64, 31, 0, 0,
-  1, 0, 8, 0, 100, 97, 116, 97, 80, 0, 0, 0, 128, 171, 208, 237, 252, 253, 239, 211, 174, 131, 88, 50, 20, 4, 2, 14, 41,
-  77, 120, 163, 202, 233, 251, 254, 242, 217, 182, 139, 96, 56, 25, 6, 1, 11, 35, 70, 112, 155, 196, 228, 248, 254, 246,
-  223, 189, 147, 104, 63, 30, 8, 1, 8, 30, 63, 104, 147, 189, 223, 246, 254, 248, 228, 196, 155, 112, 70, 35, 11
+    82, 73, 70, 70, 116, 0, 0, 0, 87, 65, 86, 69, 102, 109, 116, 32, 16, 0, 0, 0, 1, 0, 1, 0, 64, 31, 0, 0, 64, 31, 0, 0,
+    1, 0, 8, 0, 100, 97, 116, 97, 80, 0, 0, 0, 128, 171, 208, 237, 252, 253, 239, 211, 174, 131, 88, 50, 20, 4, 2, 14, 41,
+    77, 120, 163, 202, 233, 251, 254, 242, 217, 182, 139, 96, 56, 25, 6, 1, 11, 35, 70, 112, 155, 196, 228, 248, 254, 246,
+    223, 189, 147, 104, 63, 30, 8, 1, 8, 30, 63, 104, 147, 189, 223, 246, 254, 248, 228, 196, 155, 112, 70, 35, 11
 ]);
 
 
