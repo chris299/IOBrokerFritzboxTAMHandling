@@ -58,10 +58,10 @@ const debug = true;
 
 // für das transkript per Azure Speech services
 
-const transcribe = true;
+const transcribe = true; // default für den DP
 const sendAudio = false; // muss man ggf in Zeile 410 ff. konfigurieren, besser verwendet man aber den localPth Datenpunkt und sendet mit einem anderen script
 
-const azureKey = "E8wFRibQw**************************************************ACOGtfFC"; // put your key here....
+const azureKey = "1vBmB5qoU**********************************************************Ehih"; // put your key here....
 const azureTranscribeUrl = "https://westeurope.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15";
 const TAMexpectedLanguage = "de-DE";  //iso code for expected language for transcription
 
@@ -95,6 +95,7 @@ const DP_Fritzbox_AnrufbeantworterLatestMessageIndex = DP_base_Fritzbox_TAM + In
 const DP_Fritzbox_AnrufbeantworterLatestMessageData = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageData";
 const DP_Fritzbox_AnrufbeantworterLatestMessagePath = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessagePath";
 const DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageLocalPath";
+const DP_Fritzbox_AnrufbeantworterLatestMessageEnableTranskription = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageEnableTranskription";
 const DP_Fritzbox_AnrufbeantworterLatestMessageTranskript = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageTranskript";
 
 
@@ -108,13 +109,14 @@ ensureStateExists(DP_Fritzbox_AnrufbeantworterDeleteMessage, '', { name: 'Zum lo
 ensureStateExists(DP_Fritzbox_AnrufbeantworterIndexMessage_json, '', { name: 'JSON Struktur mit den Anrufbeantworter Index Eintraegen um sie in einem Select Widget darstellen zu koennen', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 
 
-ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageIndex, 0, { name: 'Index Nummer der letzten Anrufbeantworter Nachricht', unit: '', read: true, write: true, type: 'number', role: 'value', def: 0 });
-ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageData, "{}", { name: 'Metadaten der letzten Anrufbeantworter Nachricht', unit: '', read: true, write: true, type: 'string', role: 'value', def: '{}' });
-ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessagePath, "", { name: 'Pfad auf der Fritzbox zur letzten Anrufbeantworter Nachricht', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
-ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath, "", { name: 'Lokaler Pfad zur WAV-Datei der runtergeladenen Nachricht', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
+ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageIndex, 0, { name: 'Index Nummer der letzten Anrufbeantworter Nachricht', unit: '', read: true, write: false, type: 'number', role: 'value', def: 0 });
+ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageData, "{}", { name: 'Metadaten der letzten Anrufbeantworter Nachricht', unit: '', read: true, write: false, type: 'string', role: 'value', def: '{}' });
+ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessagePath, "", { name: 'Pfad auf der Fritzbox zur letzten Anrufbeantworter Nachricht', unit: '', read: false, write: true, type: 'string', role: 'value', def: '' });
+ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath, "", { name: 'Lokaler Pfad zur WAV-Datei der runtergeladenen Nachricht', unit: '', read: true, write: false, type: 'string', role: 'value', def: '' });
+ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageEnableTranskription, transcribe, { name: 'Ein- bzw. Ausschalten der Transkribierung der letzten Anrufbeantworter Nachricht auf der Fritzbox', unit: '', read: true, write: true, type: 'boolean', role: 'value', def: true });
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "", { name: 'Transkript zur letzten Anrufbeantworter Nachricht auf der Fritzbox', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 
-if (!transcribe) { setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkript deaktiviert"); }
+if (!transcribe) { setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkription deaktiviert", true); }
 
 ensureStateExists(DP_Fritzbox_SessionId, 0, { name: 'SessionId für den auhtentifizierten Zugriff auf die Fritzbox', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 
@@ -282,7 +284,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
 
     // Parameter tam index und sid extrahieren
     const sid = fullCalllistUrl.searchParams.get("sid");
-    setState(DP_Fritzbox_SessionId, sid);
+    setState(DP_Fritzbox_SessionId, sid, true);
 
 
     const tamindex = fullCalllistUrl.searchParams.get("tamindex");
@@ -315,7 +317,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
 
             if (debug) console.log("FB_xml_TamCalls aus XML extrahiert: " + FB_xml_TamCalls);
 
-            setState(DP_Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten, FB_xml_TamCalls);
+            setState(DP_Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten, FB_xml_TamCalls, true);
 
 
 
@@ -339,8 +341,8 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                             //JSON String aus der Fritzbox wenn keine Nachricht auf dem AB ist
                             //JSON: {"Root":"\n\n\n\n"}
                             Fritzbox_AnrufbeantworterDaten_json = '[{"Index":["---"],"Tam":["---"],"Called":["---"],"Date":["---"],"Duration":["---"],"Inbook":["---"],"Name":["---"],"New":["---"],"Number":["---"],"Path":["---"]}]';
-                            setState(DP_Fritzbox_AnrufbeantworterAnzahlNeueNachrichten, 0); //Anzahl der neuen Nachrichten auf 0 setzen
-                            setState(DP_Fritzbox_AnrufbeantworterDaten_json, Fritzbox_AnrufbeantworterDaten_json);
+                            setState(DP_Fritzbox_AnrufbeantworterAnzahlNeueNachrichten, 0, true); //Anzahl der neuen Nachrichten auf 0 setzen
+                            setState(DP_Fritzbox_AnrufbeantworterDaten_json, Fritzbox_AnrufbeantworterDaten_json, true);
 
                             setTimeout(function () {
 
@@ -361,14 +363,14 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                             if (debug) { console.log("TAMCalllist_JSON: " + JSON.stringify(TAMCalllist_JSON)); }
 
                             Fritzbox_AnrufbeantworterDaten_json = Fritzbox_AnrufbeantworterDaten_json.substring(19, JSON.stringify(result).length - 2); // ziemlich wüste JSON modification
-                            setState(DP_Fritzbox_AnrufbeantworterDaten_json, Fritzbox_AnrufbeantworterDaten_json);
+                            setState(DP_Fritzbox_AnrufbeantworterDaten_json, Fritzbox_AnrufbeantworterDaten_json, true);
 
                             // latest message extrahieren
 
                             // meta daten latest message setzen
                             const latestMessageIndex = getNewestMessageIndexByDate(TAMCalllist_JSON);
                             if (debug) { console.log("Index der neuesten Message (nach Datum):" + latestMessageIndex); }
-                            setState(DP_Fritzbox_AnrufbeantworterLatestMessageIndex, latestMessageIndex);
+                            setState(DP_Fritzbox_AnrufbeantworterLatestMessageIndex, latestMessageIndex, true);
 
                             const latestMessageData = TAMCalllist_JSON.Root.Message.find(msg => msg.Index[0] === String(latestMessageIndex)); // [0] weil immer alles arrays sind und der index mit ""
                             if (debug) { console.log("neuesten Message (nach Datum):" + JSON.stringify(latestMessageData)); }
@@ -377,10 +379,10 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                             const flattened = Object.fromEntries(
                                 Object.entries(latestMessageData).map(([key, value]) => [key, value[0]]));
                             if (debug) { console.log("no arrays anymore: " + JSON.stringify(flattened)); }
-                            setState(DP_Fritzbox_AnrufbeantworterLatestMessageData, JSON.stringify(flattened));
+                            setState(DP_Fritzbox_AnrufbeantworterLatestMessageData, JSON.stringify(flattened), true);
 
                             const latestMessagePath = "http://" + fullCalllistUrl.host + latestMessageData.Path[0];
-                            setState(DP_Fritzbox_AnrufbeantworterLatestMessagePath, latestMessagePath);
+                            setState(DP_Fritzbox_AnrufbeantworterLatestMessagePath, latestMessagePath, true);
                             if (debug) { console.log("Pfad zur neusten Message):" + latestMessagePath); }
 
 
@@ -414,7 +416,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                         // als datei temporär abspeichern
                                         const tempFilePath = createTempFile('message.wav', response.data);
                                         // temp pfad im iobroker verfügbar machen
-                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath, tempFilePath);
+                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath, tempFilePath, true);
 
                                         //if (debug) { console.log(response.data); }
                                         if (debug) {
@@ -433,7 +435,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
 
                                         // temp file transkribieren wenn entsprechend konfiguriert
 
-                                        if (transcribe) {
+                                        if (getState(DP_Fritzbox_AnrufbeantworterLatestMessageEnableTranskription).val) {
 
                                             var axios = require('axios');
                                             var fs = require('node:fs');
@@ -469,9 +471,9 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                                         console.log(JSON.stringify("Transkript : " + response.data.combinedPhrases?.[0]?.text));
                                                     }
                                                     if (response.data.combinedPhrases?.[0]?.text === "") {
-                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkript leer");
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkript leer", true);
                                                     } else {
-                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, (response.data.combinedPhrases?.[0]?.text || "undefiniert"));
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, (response.data.combinedPhrases?.[0]?.text || "undefiniert"),true);
                                                     }
                                                 })
                                                 .catch(function (error) {
@@ -482,14 +484,18 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                                     log("raw axios response data: " + JSON.stringify(responseData), "error");
 
                                                     if (statusCode === 401) {
-                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Azure permission denied; Transkription fehlgeschlagen");
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Azure permission denied; Transkription fehlgeschlagen",true);
                                                     } else if (statusCode === 400) {
-                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Ungültige Anfrage (400); Transkription fehlgeschlagen");
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Ungültige Anfrage (400); Transkription fehlgeschlagen",true);
                                                     } else {
-                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkription fehlgeschlagen, unbekannter Grund");
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkription fehlgeschlagen, unbekannter Grund",true);
                                                     }
                                                 });
 
+                                        }
+                                        else {
+                                           setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkription deaktiviert",true); 
+                                           if (debug) {console.log("Transkription deaktiviert");}
                                         }
                                     }
                                 }
@@ -519,7 +525,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
 
                             if (debug) console.log("Anzahl Neuer Nachrichten auf dem AB: " + Fritzbox_AnrufbeantworterAnzahlNeueNachrichtenn);
 
-                            setState(DP_Fritzbox_AnrufbeantworterAnzahlNeueNachrichten, Fritzbox_AnrufbeantworterAnzahlNeueNachrichtenn);
+                            setState(DP_Fritzbox_AnrufbeantworterAnzahlNeueNachrichten, Fritzbox_AnrufbeantworterAnzahlNeueNachrichtenn,true);
                         }
                     }
                 });
