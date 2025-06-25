@@ -45,6 +45,9 @@ Einschränkungen:
 2025-06-23:
          - message download und transkirbierung ergänzt        
          - multi-AB angefangen, siehe auch https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/x_contactSCPD.pdf          
+
+2025-06-25:
+        - iob datenpunkt mit temp pfad, damit man das wav weiter senden kann         
 */
 
 
@@ -56,10 +59,12 @@ const debug = true;
 // für das transkript per Azure Speech services
 
 const transcribe = true;
-const sendAudio = true; // muss man in Zeile 380 ff. konfigurieren
+const sendAudio = false; // muss man in Zeile 410 ff. konfigurieren
 
-const azureKey = "E8wFRibQwQEbw3AAAYACOGtfFC";
+const azureKey = "E8wFRib***********************************************YACOGtfFC"; // put your key here...
 const azureTranscribeUrl = "https://westeurope.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version=2024-11-15";
+const TAMexpectedLanguage = "de-DE";  //iso code for expected language for transcription
+
 var FormData = require('form-data');
 
 // für die FRitzbox (DP des iobroker tr64 Adapters für soap Commandos)
@@ -88,6 +93,7 @@ const DP_Fritzbox_AnrufbeantworterIndexMessage_json = DP_base_Fritzbox_TAM + Ind
 const DP_Fritzbox_AnrufbeantworterLatestMessageIndex = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageIndex";
 const DP_Fritzbox_AnrufbeantworterLatestMessageData = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageData";
 const DP_Fritzbox_AnrufbeantworterLatestMessagePath = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessagePath";
+const DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageLocalPath";
 const DP_Fritzbox_AnrufbeantworterLatestMessageTranskript = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageTranskript";
 
 
@@ -104,6 +110,7 @@ ensureStateExists(DP_Fritzbox_AnrufbeantworterIndexMessage_json, '', { name: 'JS
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageIndex, 0, { name: 'Index Nummer der letzten Anrufbeantworter Nachricht', unit: '', read: true, write: true, type: 'number', role: 'value', def: 0 });
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageData, "{}", { name: 'Metadaten der letzten Anrufbeantworter Nachricht', unit: '', read: true, write: true, type: 'string', role: 'value', def: '{}' });
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessagePath, "", { name: 'Pfad auf der Fritzbox zur letzten Anrufbeantworter Nachricht', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
+ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath, "", { name: 'Lokaler Pfad zur WAV-Datei der runtergeladenen Nachricht', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "", { name: 'Transkript zur letzten Anrufbeantworter Nachricht auf der Fritzbox', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 
 if (!transcribe) { setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkript deaktiviert"); }
@@ -133,9 +140,9 @@ function Fritzbox_Anrufbeantworter_DeleteMessage(NewMessageIndex) {
 
     var befehl_DeleteMessage = '{"service": "urn:dslforum-org:service:X_AVM-DE_TAM:1","action": "DeleteMessage","params": {"NewIndex": "' + Index_Anrufbeantworter + '", "NewMessageIndex": "' + NewMessageIndex + '" }}';
     if (debug) { console.log("Soap Comand : " + befehl_DeleteMessage); }
-    setState("tr-064.0.states.command", "{}");
-    setState("tr-064.0.states.command", befehl_DeleteMessage); //Befehl zum loeschen einer Nachricht im Anrufbeantworter
-    if (debug) console.log("Antwort auf command im State tr-064.0.states.commandResult: " + getState("tr-064.0.states.commandResult").val);
+    setState(DP_Fritzbox_tr64_Command, "{}"); // alt, evtl. streichen
+    setState(DP_Fritzbox_tr64_Command, befehl_DeleteMessage); //Befehl zum loeschen einer Nachricht im Anrufbeantworter
+    if (debug) console.log("Antwort auf command im State tr-064.0.states.commandResult: " + getState(DP_Fritzbox_tr64_CommandResult).val);
 
     Fritzbox_Anrufbeantworter_GetMessageList(Index_Anrufbeantworter);
 }
@@ -403,7 +410,10 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                         // hier noch check , ob da wirklich eine wav datei zurück gekommen ist...
                                         const byteArray = new Uint8Array(response.data);
                                         if (!isValidWav(byteArray)) {log("maybe not valid WAV", "warn");} else { if (debug) {log("Wav format test success");} }
+                                        // als datei temporär abspeichern
                                         const tempFilePath = createTempFile('message.wav', response.data);
+                                        // temp pfad im iobroker verfügbar machen
+                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageLocalPath,tempFilePath);
 
                                         //if (debug) { console.log(response.data); }
                                         if (debug) {
@@ -414,7 +424,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                         // Use the new path in other scripts (e.g. sendTo)
                                         if (sendAudio) {
                                             sendTo('email.1', 'send', {
-                                                text: 'Neue AB Nachricht im Anhang', to: 'c@vme.de', subject: 'Neue AB Nachricht',
+                                                text: 'Neue AB Nachricht im Anhang', to: 'test@test.de', subject: 'Neue AB Nachricht',
                                                 attachments: [{ path: tempFilePath, cid: 'message.wav' },],
                                             }
                                             );
@@ -428,7 +438,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                             var fs = require('node:fs');
                                             var data = new FormData();
 
-                                            data.append('definitions', '{"locales":["de-DE"], "profanityFilterMode":"None"}');
+                                            data.append('definitions', '{"locales":["' + TAMexpectedLanguage + '"], "profanityFilterMode":"None"}');
                                             data.append('audio', fs.createReadStream(tempFilePath));
 
                                             if (debug) {
