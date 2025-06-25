@@ -11,6 +11,9 @@ on({ id: [].concat(['0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_Anrufbeant
     text: message,
     to: 'test@test.de',
     subject: 'AB message transkript',
+    attachments:[
+      { path: getState('0_userdata.0.Telefon.Anrufbeantworter.1.Fritzbox_AnrufbeantworterLatestMessageLocalPath').val, cid: 'file1' },
+    ],
   });
   sendTo("whatsapp-cmb.0", "send", {
       text: message
