@@ -64,26 +64,33 @@ var FormData = require('form-data');
 
 // für die FRitzbox (DP des iobroker tr64 Adapters für soap Commandos)
 const DP_Fritzbox_tr64_Command = "tr-064.0.states.command";
-const DP_Fritzbox_tr64_CommandResult = "tr-064.0.states.command";
+const DP_Fritzbox_tr64_CommandResult = "tr-064.0.states.commandResult";
 
+const DP_Fritzbox_SessionId = "0_userdata.0.Telefon.Fritzbox_SessionId"; //session ID aus authentifizierung des adapters (oder eigenem login)
 
 const Index_Anrufbeantworter = 1; //ID des hier zu verwendenden Anrufbeantworters in der Fritzbox. Der erste Anrufbeantworter hat die ID 0
 
 // noch nicht vollständig flexibilisiert und ggf. für mehrere ABs funktional
 
-const DP_Fritzbox_AnrufbeantworterDaten_json = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDaten_json";
-const DP_Fritzbox_AnrufbeantworterDatenAktualisieren = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDatenAktualisieren";
-const DP_Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten";
-const DP_Fritzbox_AnrufbeantworterAnzahlNeueNachrichten = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterAnzahlNeueNachrichten"
-const DP_Fritzbox_AnrufbeantworterDeleteMessage = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDeleteMessage";
-const DP_Fritzbox_AnrufbeantworterIndexMessage_json = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterIndexMessage_json";
+const DP_base_Fritzbox_TAM = "0_userdata.0.Telefon.Anrufbeantworter.";
 
-const DP_Fritzbox_AnrufbeantworterLatestMessageIndex = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageIndex";
-const DP_Fritzbox_AnrufbeantworterLatestMessageData = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageData";
-const DP_Fritzbox_AnrufbeantworterLatestMessagePath = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessagePath";
-const DP_Fritzbox_AnrufbeantworterLatestMessageTranskript = "0_userdata.0.Telefon.Anrufbeantworter." + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageTranskript";
 
-const DP_Fritzbox_SessionId = "0_userdata.0.Telefon.Fritzbox_SessionId"; //session ID aus authentifizierung des adapters (oder eigenem login)
+
+// hier ggf. den oder die aktiven TAM ermitteln und alle DPs anlegen
+
+const DP_Fritzbox_AnrufbeantworterDaten_json = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDaten_json";
+const DP_Fritzbox_AnrufbeantworterDatenAktualisieren = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDatenAktualisieren";
+const DP_Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterGesamtAnzahlNachrichten";
+const DP_Fritzbox_AnrufbeantworterAnzahlNeueNachrichten = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterAnzahlNeueNachrichten"
+const DP_Fritzbox_AnrufbeantworterDeleteMessage = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterDeleteMessage";
+const DP_Fritzbox_AnrufbeantworterIndexMessage_json = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterIndexMessage_json";
+
+const DP_Fritzbox_AnrufbeantworterLatestMessageIndex = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageIndex";
+const DP_Fritzbox_AnrufbeantworterLatestMessageData = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageData";
+const DP_Fritzbox_AnrufbeantworterLatestMessagePath = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessagePath";
+const DP_Fritzbox_AnrufbeantworterLatestMessageTranskript = DP_base_Fritzbox_TAM + Index_Anrufbeantworter + ".Fritzbox_AnrufbeantworterLatestMessageTranskript";
+
+
 
 
 ensureStateExists(DP_Fritzbox_AnrufbeantworterDaten_json, '{}', { name: 'JSON Struktur mit den Daten vom Anrufbeantworter aus der FritzBox', unit: '', type: 'string', role: 'value', def: '{}' });
@@ -98,6 +105,8 @@ ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageIndex, 0, { name: 'In
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageData, "{}", { name: 'Metadaten der letzten Anrufbeantworter Nachricht', unit: '', read: true, write: true, type: 'string', role: 'value', def: '{}' });
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessagePath, "", { name: 'Pfad auf der Fritzbox zur letzten Anrufbeantworter Nachricht', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 ensureStateExists(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "", { name: 'Transkript zur letzten Anrufbeantworter Nachricht auf der Fritzbox', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
+
+if (!transcribe) { setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkript deaktiviert"); }
 
 ensureStateExists(DP_Fritzbox_SessionId, 0, { name: 'SessionId für den auhtentifizierten Zugriff auf die Fritzbox', unit: '', read: true, write: true, type: 'string', role: 'value', def: '' });
 
@@ -200,8 +209,6 @@ async function Fritzbox_Anrufbeantworter_GetMessageList(tam_index) {
 
     const parseString = require('xml2js').parseString;
 
-    var Result_Fritzbox_HyperlinkXmlTAM;
-
     var Fritzbox_AnrufbeantworterAnzahlNeueNachrichtenn = 0;
 
     var Fritzbox_AnrufbeantworterDaten_json = "";
@@ -225,7 +232,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
     if (debug) { console.log("Soap Comand : " + SoapCommand); }
 
     // setState("tr-064.0.states.command", "{}"); // wozu ist das gut? braucht man m.e. nicht. (übernommen aus frührer Version)
-    await setStateAsync("tr-064.0.states.command", SoapCommand); //Befehl zum auslesen der Anrufbeantworterdaten in Datenpunkt schreiben
+    await setStateAsync(DP_Fritzbox_tr64_Command, SoapCommand); //Befehl zum auslesen der Anrufbeantworterdaten in Datenpunkt schreiben
 
 
     await setStateAsync(DP_Fritzbox_AnrufbeantworterIndexMessage_json, "");  //Setzt den aktuellen Inhalt vom Datenpunkt zurück, damit im Verlauf die Index Nummer von den Anrufen neu geschrieben werden können
@@ -240,7 +247,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
     // manchmal kommt anscheinend erstmal ein error 500 (interner server error) von der Fritzbox zurück. muss man nochmal beobachten
     // evtl. muss man hier auch einfach etwas warten.... 100-200 ms sollten das schon sein
 
-    const SoapResponse = await getStateAsync("tr-064.0.states.commandResult");
+    const SoapResponse = await getStateAsync(DP_Fritzbox_tr64_CommandResult);
     if (debug) console.log("Antwort auf command im State tr-064.0.states.commandResult: " + SoapResponse.val);
     if (SoapResponse.val === '{"code":500}') { log("soap command returned 500", "error"); return; } //abbruch bei result code 500
 
@@ -274,7 +281,7 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
 
     if (debug) { console.log("sid : " + sid + " ; tamindex : " + tamindex); }
 
-   // if (debug) console.log("Extrahierter Hyperlink aus commandresult. CommandResult: " + getState("tr-064.0.states.commandResult").val + " und der extrahierte Link: " + Result_Fritzbox_HyperlinkXmlTAM);
+    // if (debug) console.log("Extrahierter Hyperlink aus commandresult. CommandResult: " + getState("tr-064.0.states.commandResult").val + " und der extrahierte Link: " + Result_Fritzbox_HyperlinkXmlTAM);
 
 
     //Das XML File wird abgeholt, geparst und in eine JSON Struktur umgewandelt       
@@ -393,7 +400,9 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                         log("Fehler beim Message-Download: " + error, "error");
                                         return;
                                     } else {
-                                        // hier evtl. noch check ergänzen, ob das wirklich eine wav datei ist...
+                                        // hier noch check , ob da wirklich eine wav datei zurück gekommen ist...
+                                        const byteArray = new Uint8Array(response.data);
+                                        if (!isValidWav(byteArray)) {log("maybe not valid WAV", "warn");} else { if (debug) {log("Wav format test success");} }
                                         const tempFilePath = createTempFile('message.wav', response.data);
 
                                         //if (debug) { console.log(response.data); }
@@ -448,10 +457,16 @@ damit muss man ggf. multiple ABs einrichten (in <Item>)
                                                         console.log(JSON.stringify(response.data));
                                                         console.log(JSON.stringify("Transkript : " + response.data.combinedPhrases?.[0]?.text));
                                                     }
-                                                    setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, (response.data.combinedPhrases?.[0]?.text || ""));
+                                                    if (response.data.combinedPhrases?.[0]?.text==="") {
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkript leer");
+                                                    } else {
+                                                        setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, (response.data.combinedPhrases?.[0]?.text || "undefiniert"));
+                                                    }
                                                 })
                                                 .catch(function (error) {
-                                                    console.log(error);
+                                                    log(error, "error");
+                                                    log(JSON.stringify(response.data), "error");
+                                                    setState(DP_Fritzbox_AnrufbeantworterLatestMessageTranskript, "Transkription fehlgeschlagen");
                                                 });
 
                                         }
@@ -528,6 +543,38 @@ function getNewestMessageIndexByDate(data) {
     return newestMessage ? parseInt(newestMessage.Index[0]) : null;
 }
 
+// Helper für WAV prüfung, gibt Boolean zurück
+function isValidWav(wavBytes) {
+    // Prüfe Länge für Header
+    if (!(wavBytes instanceof Uint8Array) || wavBytes.length < 44) return false;
+
+    // Hilfsfunktion zum Lesen eines ASCII-Strings
+    function readAscii(offset, length) {
+        return String.fromCharCode(...wavBytes.slice(offset, offset + length));
+    }
+
+    const riff = readAscii(0, 4);
+    const wave = readAscii(8, 4);
+    const fmt = readAscii(12, 4);
+    const dataChunkOffset = wavBytes.findIndex((_, i) =>
+        readAscii(i, 4) === "data"
+    );
+
+    return (
+        riff === "RIFF" &&
+        wave === "WAVE" &&
+        fmt === "fmt " &&
+        dataChunkOffset !== -1
+    );
+}
+
+// test wav file, Kann direkt mit new Blob([wavData.buffer], {type: "audio/wav"}) verwendet werden.
+const TestWavData = new Uint8Array([
+  82, 73, 70, 70, 116, 0, 0, 0, 87, 65, 86, 69, 102, 109, 116, 32, 16, 0, 0, 0, 1, 0, 1, 0, 64, 31, 0, 0, 64, 31, 0, 0,
+  1, 0, 8, 0, 100, 97, 116, 97, 80, 0, 0, 0, 128, 171, 208, 237, 252, 253, 239, 211, 174, 131, 88, 50, 20, 4, 2, 14, 41,
+  77, 120, 163, 202, 233, 251, 254, 242, 217, 182, 139, 96, 56, 25, 6, 1, 11, 35, 70, 112, 155, 196, 228, 248, 254, 246,
+  223, 189, 147, 104, 63, 30, 8, 1, 8, 30, 63, 104, 147, 189, 223, 246, 254, 248, 228, 196, 155, 112, 70, 35, 11
+]);
 
 
 //------------------------- Anrufername oder Telefonnummer ermitteln -----------
