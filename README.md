@@ -6,7 +6,9 @@ Script to manage and transcribe answering machine messages on AVM Fritzbox with 
 often difficult to hear messages, so it makes sense to get a quicker idea of the content by reading the transcript
 
 ## Usage
-The script to send transcript is separate and triggered by new transcript in iobroker datapoint
+The part to send the transcript is separate and triggered by new transcript enabling datapoint in iobroker userdata area
+Your Azure transcription service key needs to be configured in the script.
+WAV File can be sent by another script as the path to the downloaded message is provided in the datapoint.
 
 ## Requirements
 Setting up and running TR-064 adapter in IOBroker (and Javascript Adapter of course)
@@ -32,8 +34,6 @@ https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHu
 
 ## ToDo
 - Multiple TAMs not supported yet
-- Sending of wav files is possible, but not nicely integrated to be used with other scripts (needs patching of script)
-
 
 ## Credits
 based on the work of @Feuersturm
@@ -54,4 +54,7 @@ https://fritz.com/service/schnittstellen/
 https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/x_contactSCPD.pdf    
 
 https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/x_tam.pdf
+
+# Change log
+0.7 work in progress released on github
 
