@@ -1,3 +1,8 @@
+# ⚠️ Archiviert
+
+Dieses Repository wurde archiviert. 
+Die aktuelle Version findest du hier: https://github.com/chris299/iobroker-fritzbox-utilities 
+
 # IOBrokerFritzboxTAMHandling
 Script to manage and transcribe answering machine messages on AVM Fritzbox with IOBroker.
 
